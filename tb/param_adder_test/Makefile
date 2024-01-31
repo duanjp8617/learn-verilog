@@ -1,37 +1,3 @@
-#!/bin/bash
-
-if [ "$#" -ne 1 ]; then
-    echo "Must specify 1 file name"
-    exit -1
-else
-    if [ -d ./$1_test ]; then
-        echo "Testbench $1_test already exists"
-        exit -1
-    fi
-
-    if ! which iverilog >/dev/null; then
-        echo "iverilog is not installed"
-        exit -1
-    fi
-
-    if ! which vvp >/dev/null; then
-        echo "vvp is not installed"
-        exit -1
-    fi
-
-    if ! which cocotb-config >/dev/null; then
-        echo "cocotb-config is not installed"
-        exit -1
-    fi
-fi
-
-COCOTB_LIB_DIR=$(cocotb-config --lib-dir)
-COCOTB_LIB_NAME=$(cocotb-config --lib-name vpi icarus)
-
-mkdir -p $1_test
-
-# the makefile template
-read -d '\n' MAKEFILE << 'EndOfText'
 # the icarus compiler and runtime
 ICARUS_COMP = iverilog
 ICARUS_RUNTIME = vvp
@@ -40,10 +6,10 @@ ICARUS_RUNTIME = vvp
 VERILATOR_COMP = verilator
 
 # can be queried with: cocotb-config --lib-dir
-COCOTB_LIB_DIR = %%%1
+COCOTB_LIB_DIR = /usr/local/lib/python3.10/dist-packages/cocotb/libs
 
 # can be quried with: cocotb-config --lib-name vpi icarus
-COCOTB_LIB_NAME = %%%2
+COCOTB_LIB_NAME = libcocotbvpi_icarus
 
 # the build directory
 SIM_BUILD = sim_build
@@ -53,7 +19,7 @@ OBJ_DIR = obj_dir
 ICARUS_COMP_FLAGS = -o $(SIM_BUILD)/sim.vvp -f $(SIM_BUILD)/cmds.f -g2012
 
 # the dut source files
-DUT = %%%3
+DUT = param_adder
 TOPLEVEL = $(DUT)
 MODULE = $(DUT)_test
 VERILOG_SOURCES += ../../rtl/$(DUT).v
@@ -86,18 +52,3 @@ syntax:
 
 clean:
 	rm -rf __pycache__ $(SIM_BUILD) $(OBJ_DIR) results.xml
-EndOfText
-
-(echo "$MAKEFILE" | sed "s:%%%1:$COCOTB_LIB_DIR:g; s:%%%2:$COCOTB_LIB_NAME:g; s:%%%3:$1:g") >> $1_test/Makefile
-
-read -d '\n' PYTHON << 'EndOfText'
-import cocotb
-
-from cocotb.triggers import Timer
-
-@cocotb.test()
-async def test_method(dut):
-    pass
-EndOfText
-
-echo "$PYTHON" >> $1_test/$1_test.py
