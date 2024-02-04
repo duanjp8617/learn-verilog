@@ -1,10 +1,10 @@
 import cocotb
+from cocotb_test.simulator import run
 import random
 
 from cocotb.triggers import Timer
 
-@cocotb.test()
-async def adder_test(dut):
+async def method(dut):
     dut.a.value = 100
     dut.b.value = 50
 
@@ -15,7 +15,7 @@ async def adder_test(dut):
     pass
 
 @cocotb.test()
-async def overflow_test(dut):
+async def overflow(dut):
     dut.a.value = 0b11111111
     dut.b.value = 0x01
 
@@ -24,3 +24,12 @@ async def overflow_test(dut):
     assert dut.c.value == 0x00, f"Error when performing overflow add"
 
     pass
+
+def test_adder():
+    run(
+        verilog_sources=["../rtl/adder.v"], 
+        toplevel="adder",          
+        module="adder_test",
+        timescale="1ns/1ps",
+        force_compile=True,
+    )
