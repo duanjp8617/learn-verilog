@@ -37,10 +37,12 @@ register(
     .q (dout)
 );
 
-
+// wire can only be assigned outside always block
 assign a = 'd1;
 assign b = dout;
 
+// reg can only be assigned within always block
+// this is true because we are simulating a mux here
 always @* begin
     if ( (rst == 1) || (dout == COUNTS-1) )
         d = 0;
